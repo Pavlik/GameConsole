@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../SpaceInvaders"
+		},
+		{
+			"name": "code",
+			"path": "../SpaceInvaders/code"
+		},
+		{
+			"name": "Space Invaders",
+			"path": "Code/Space Invaders"
+		}
+	],
+	"settings": {}
+}
