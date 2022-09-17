@@ -67,6 +67,11 @@ void drawScreen()
   update();
 }
 
+/*
+Функция отрисовки спрайтов 
+Передваймые значения: Координата по оси X, координата по оси Y, спрайт с bitmap
+*/
+
 void drawing(int x, int y, int sprite)
 {
   switch (sprite)
@@ -97,6 +102,10 @@ void drawing(int x, int y, int sprite)
       break;
   }
 }
+
+/*
+Функция отрисовки корабля
+*/
 
 void drawShip()
 {
