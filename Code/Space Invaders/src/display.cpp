@@ -120,8 +120,11 @@ int invader_new_y_position;
 
 void drawInvaders()
 {
-  monstersSpeed();
+  monstersSpeed(); // функция задает скорость движения монстров
   invadersMoving(invaderSpeed, INWADERS_DESCENT);
+  /*
+    В цикле задаются позиции для монстров
+  */
   for(int i = 0; i < MONSTERS; i++)
   {
     if(i < 6) 
@@ -142,6 +145,9 @@ void drawInvaders()
     
     invaders[i].setXposition(invader_new_x_position);
     invaders[i].setYposition(invader_new_y_position);
+    /*
+      отрисовка определенного спрайта для каждого ряда монстров
+    */
     if(invaders[i].getStatus() && i < 6) 
       drawing(invaders[i].getXposition(), invaders[i].getYposition(), SPRUT);
     if(invaders[i].getStatus() && i >=6 && i< 12) 
@@ -152,7 +158,7 @@ void drawInvaders()
 }
 
 bool sideFlag = 1;
-int rightBorder = MONSTER_W*MONSTERS_IN_ROW-4;
+int rightBorder = MONSTER_W*MONSTERS_IN_ROW-4; 
 int leftBorder = 1;
 float buffPosition = 16.0;
 float *pBuff = &buffPosition;
@@ -162,20 +168,25 @@ byte descentCounter = 0;
 void invadersMoving(float speed, int descent)
 {
   /*0 - left, 1 - right*/
-  /*Почему если написать так buffPosition = (float)invaders[0].getXposition(); , то скорость будет не равномерной!!!!???*/
+  //Почему если написать так: buffPosition = (float)invaders[0].getXposition(); , то скорость будет не равномерной???
     if(sideFlag)
     {
-      buffPosition += speed;
+      /*
+      изначально позиция равно 16, тут к ней прибавляется переменная speed, которая передается через invaderSpeed (задается в monstersSpeed())
+      */
+      buffPosition += speed; 
       invaders[0].setXposition(buffPosition);
-      if(buffPosition >= 128-rightBorder) sideFlag = 0;
+      if(buffPosition >= 128-rightBorder) sideFlag = 0; // меняется направление движения, rightBorder задается в функции 
     }
     if(!sideFlag)
     {
       buffPosition -= speed;
       invaders[0].setXposition(buffPosition);
-      if(buffPosition <= leftBorder) sideFlag = 1;
+      if(buffPosition <= leftBorder) sideFlag = 1; // меняется направление движения, leftBorder задается в функции 
     }
-    
+    /*
+    Если монстры касаются границы, тогда они оускаются на передаваемое значение переменной descent
+    */
     if(downFlag == sideFlag) 
     {
       downFlag = !sideFlag;
@@ -185,8 +196,10 @@ void invadersMoving(float speed, int descent)
 
 }
 
+/*
+  Проверяет нажатие кнопки выпуска ракеты корабля
+*/
 extern volatile bool fire;
-int bullet_position = 0;
 bool fireState = 0;
 
 void checkFireState()
@@ -203,17 +216,22 @@ void checkFireState()
   } 
 }
 
-bool bulletStart = 0;
-void shipBulletMoving(float speed)
+/*
+  Задает логику движения ракеты корабля
+*/
+bool bulletStart = 0; // изначально ракета готова к запуску
+int bullet_position = 0;
+
+void shipBulletMoving(float speed) 
 {
-  if(bulletStart == 0 && !fireState)
+  if(bulletStart == 0 && !fireState)                                  //Ракета готова к запуску и неразрешено стрелять
   {
-    shipBullet.setXposition(spaceShip.getXposition() + (SHIP_W-3)/2);
-    bullet_position = 62-SHIP_H;
+    shipBullet.setXposition(spaceShip.getXposition() + (SHIP_W-3)/2); // позиция ракеты по середине корабля по X
+    bullet_position = 62-SHIP_H;                                      // позиция ракеты по середине корабля по Y
     shipBullet.setYposition(bullet_position);
-    shipBullet.setStatus(1);
+    shipBullet.setStatus(1);                                          // Ракета не столкнулась с монстром
   }
-  if(bulletStart == 0 && fireState)
+  if(bulletStart == 0 && fireState)                                   //Ракета готова к запуску и разрешено стрелять
   {
     bullet_position -= speed;
     if(bullet_position <= 0) 
@@ -225,8 +243,9 @@ void shipBulletMoving(float speed)
       }
     shipBullet.setYposition(bullet_position); 
   }
-  if(fireState == 0 && bulletStart) bulletStart = 0;
-  if(shipBullet.getStatus() && spaceShip.getStatus())drawing(shipBullet.getXposition(),shipBullet.getYposition(), SHIP_BULLET);
+  if(bulletStart && fireState == 0 ) bulletStart = 0;                         //Ракета выпущена и неразрешено стрелять
+  if(shipBullet.getStatus() && spaceShip.getStatus())                         //Отрисовывать ракету, если она и корабль не уничтожены 
+    drawing(shipBullet.getXposition(),shipBullet.getYposition(), SHIP_BULLET);
 }
 
 void killMonster()
@@ -237,23 +256,27 @@ void killMonster()
        && ((shipBullet.getYposition() <= invaders[i].getYposition() + MONSTER_H/2+2) && (shipBullet.getYposition() > invaders[i].getYposition())) && shipBullet.getStatus()
        && spaceShip.getStatus()) 
     {
+      // Система очков
       if(invaders[i].getSkin() == OCTOPUS) currentScore += 5;
       if(invaders[i].getSkin() == CRAB) currentScore += 10;
       if(invaders[i].getSkin() == SPRUT) currentScore += 15;
-      shipBullet.setStatus(0);
-      invaders[i].setStatus(0);
+      shipBullet.setStatus(0);  //Ракета столкнулась и уничтожена
+      invaders[i].setStatus(0); //Угичтожен монстр
     }
   }
 } 
 
 byte currentLeftColomn = 0;
 byte currentRightColomn = MONSTERS_IN_ROW;
+
+/*
+  Проверяет есть ли живые монстры, и если нет, тогда возвращает параметры монстров к исходным
+*/
 void checkMonsters()
 {
   int counter = 0;
   for(int i = 0; i < MONSTERS; i++)
   {
-    if(invaders[i].getStatus() == 0) 
     if(invaders[i].getStatus() == 0) counter++;
     if(counter == MONSTERS) 
     {
@@ -276,6 +299,9 @@ void checkMonsters()
   }
 }
 
+/*
+  Сдвигает левую границу движения монстров, если уничтожен крайняя левая колона
+*/
 void shiftLeftBorder()
 {
   for(int i = 0; i < MONSTERS/ROWS; i++)
@@ -288,6 +314,10 @@ void shiftLeftBorder()
     }
   }
 }
+
+/*
+  Сдвигает правую границу движения монстров, если уничтожен крайняя правая колона
+*/
 
 void shiftRightBorder()
 {
@@ -302,12 +332,20 @@ void shiftRightBorder()
   }
 }
 
+/*
+  Если координата монстра опустилась до высты корабля, то корабль считается уничтоженным
+*/
+
 void killShipByDescent()
 {
   for(byte i = 0; i < MONSTERS; i++)
     if(invaders[i].getYposition() + MONSTER_H >= (spaceShip.getYposition() - SHIP_BULLET_H) && invaders[i].getStatus() && spaceShip.getStatus()) 
       spaceShip.setStatus(0);
 }
+
+/*
+  Если координаты пули монстра совпадают с границами корабля, тогда считать корабль уничтоженым
+*/
 
 void killShipByBullet()
 {
@@ -325,21 +363,44 @@ void killShipByBullet()
     }
 }
 
+/*
+  Зажигает светодиоды, обознчающие жизни корабля
+*/
+
 void lightShipLifs()
 {
-  if(spaceShip.getHP() == 3) for(byte i = 5; i < 8; i++) digitalWrite(i, 1);
-  else if(spaceShip.getHP() == 2) for(byte i = 5; i < 7; i++) { digitalWrite(i, 1); digitalWrite(7, 0);}
-  else if(spaceShip.getHP() == 1) { digitalWrite(5, 1); digitalWrite(6, 0); digitalWrite(7, 0);}
-  else if(spaceShip.getHP() == 0 ) for(byte i = 5; i < 8; i++) digitalWrite(i, 0);
+  if(spaceShip.getHP() == 3) 
+    for(byte i = 5; i < 8; i++) 
+      digitalWrite(i, 1);
+  else if(spaceShip.getHP() == 2) 
+    for(byte i = 5; i < 7; i++) 
+    {
+      digitalWrite(i, 1); 
+      digitalWrite(7, 0);
+    }
+  else if(spaceShip.getHP() == 1)
+  { 
+    digitalWrite(5, 1); 
+    digitalWrite(6, 0); 
+    digitalWrite(7, 0);
+  }
+  else if(spaceShip.getHP() == 0 ) 
+    for(byte i = 5; i < 8; i++) 
+      digitalWrite(i, 0);
 }
+
+/*
+Функция управления скоростью движения монстров
+Скорость изначально равна INWADERS_SPEED (1)
+При каждом новом цикле сравнивается значение buffer и total и если они не равны, тогда новая скорость рассчитывается так:
+  количество живых монстров умножается на коэфициент CHANGE_GRADE (0.15) и прибавляется к переменной new_speed
+*/
 
 void monstersSpeed()
 { 
   static byte buffer = MONSTERS;
   static float new_speed = invaderSpeed;
-
   byte total = getAlifeMonsters();
-
   if(buffer != total) 
     {
       invaderSpeed = new_speed + (float)(MONSTERS - total) * CHANGE_GRADE;
@@ -376,12 +437,20 @@ void invadersBullet(byte shotFrequency)
   }
 }
 
+/*
+  Логика движения пули монстра 
+*/
+
 void invadersBulletMoving(float speed)
 {
   if(monstersBullet.getYposition() <= 64 && monstersBullet.getStatus()) monstersBullet.setYposition(monstersBullet.getYposition()+speed);
   else monstersBullet.setStatus(0);
   if(monstersBullet.getStatus()) drawing(monstersBullet.getXposition(), monstersBullet.getYposition(), INVADER_BULLET);
 }
+
+/*
+  Возвразщает количество живых монстров
+*/
 
 byte getAlifeMonsters()
 {
